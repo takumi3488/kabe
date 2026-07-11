@@ -1,0 +1,52 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+setopt extended_glob null_glob
+
+readonly WALLPAPER_DIR="$HOME/.kabe"
+
+fail() {
+  print -u2 -- "kabe: $*"
+  exit 1
+}
+
+main() {
+  local desktoppr_bin macos_wp_bin current_image current_name next_image state_file temporary_state
+  local -a images
+  integer index
+
+  [[ -d "$WALLPAPER_DIR" ]] || fail "wallpaper directory does not exist: $WALLPAPER_DIR"
+
+  images=("$WALLPAPER_DIR"/*.(jpg|jpeg|png|gif|webp|heic)(N))
+  (( ${#images[@]} > 0 )) || fail "no supported images found in: $WALLPAPER_DIR"
+
+  macos_wp_bin="$(command -v macos-wp || true)"
+  [[ -n "$macos_wp_bin" ]] || fail "macos-wp is required; install it with: brew install marek-vybiral/macos-wp/macos-wp"
+  desktoppr_bin="$(command -v desktoppr || true)"
+  [[ -n "$desktoppr_bin" ]] || fail "desktoppr is required; install it with: brew install --cask desktoppr"
+
+
+  state_file="$WALLPAPER_DIR/.last-wallpaper"
+  current_image=''
+  [[ -r "$state_file" ]] && current_image="$(<"$state_file")"
+  current_name="${${current_image:t}:-none}"
+  next_image="${images[1]}"
+
+  for (( index = 1; index <= ${#images[@]}; index++ )); do
+    if [[ "${images[index]}" == "$current_image" ]]; then
+      next_image="${images[(index % ${#images[@]}) + 1]}"
+      break
+    fi
+  done
+
+  "$macos_wp_bin" set "$next_image"
+  "$desktoppr_bin" "$next_image"
+
+
+  temporary_state="${state_file}.${RANDOM}"
+  print -r -- "$next_image" > "$temporary_state"
+  mv -- "$temporary_state" "$state_file"
+
+  print -- "Wallpaper changed on all Spaces: $current_name -> ${next_image:t}"
+}
+
+main "$@"
