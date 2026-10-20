@@ -89,6 +89,11 @@ rm /usr/local/bin/kabe
 rm -f ~/.kabe/.last-wallpaper
 ```
 
+## Support
+
+If you find kabe useful, consider [sponsoring takumi3488](https://github.com/sponsors/takumi3488)
+to support its development and maintenance.
+
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE).
